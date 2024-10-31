@@ -1,0 +1,15 @@
+
+<nav>
+    <ul>
+        <li>
+            <a href="{% url 'mailing:client_list' %}">Список клиентов</a>
+        </li>
+        <li>
+            <a href="{% url 'mailing:message_list' %}">Список сообщений</a>
+        </li>
+        <li>
+            <a href="{% url 'mailing:newsletter_list' %}" class="btn btn-primary">Список рассылок</a>
+        </li>
+        <li><a href="{% url 'home' %}">Главная</a></li>
+    </ul>
+</nav>

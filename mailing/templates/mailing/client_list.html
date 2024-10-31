@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "mailing/navbar.html" %}
+  <h2>Список клиентов</h2>
+  <a href="{% url 'mailing:client_add' %}">Добавить нового клиента</a>
+  <ul>
+    {% for client in clients %}
+      <li>
+        <a href="{% url 'mailing:client_detail' pk=client.pk %}">{{ client.full_name }}</a> - {{ client.email }}
+        <br>
+        <strong>Комментарий:</strong> {{ client.comment|default:"Нет комментариев" }}
+        <br>
+        <a href="{% url 'mailing:client_edit' client.pk %}">Редактировать</a>
+        <a href="{% url 'mailing:client_delete' client.pk %}">Удалить</a>
+
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

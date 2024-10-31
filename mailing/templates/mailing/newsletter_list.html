@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+    <h2>Список рассылок</h2>
+    <ul>
+        {% for newsletter in newsletters %}
+            <li>
+                <strong>Сообщения:</strong>
+                    <ul>
+                        {% for message in newsletter.message.all %}
+                            <li>{{ message.subject }}</li>
+                        {% empty %}
+                            <li>Нет сообщений</li>
+                        {% endfor %}
+                    </ul>
+                <strong>Начало рассылки:</strong> {{ newsletter.sent_date }}<br>
+                <strong>Окончание рассылки:</strong> {{ newsletter.end_date }}<br>
+                <strong>Статус:</strong> {{ newsletter.get_status_display }}<br>
+                <strong>Получатели:</strong>
+                <ul>
+                    {% for recipient in newsletter.recipients.all %}
+                        <li>{{ recipient.full_name }}</li>
+                    {% empty %}
+                        <li>Нет получателей</li>
+                    {% endfor %}
+                </ul>
+                <a href="{% url 'mailing:newsletter_edit' newsletter.pk %}">Редактировать</a>
+                <a href="{% url 'mailing:newsletter_delete' newsletter.pk %}">Удалить</a>
+            </li>
+        {% empty %}
+            <li>Нет рассылок.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'mailing:newsletter_add' %}">Добавить новую рассылку</a>
+{% endblock %}

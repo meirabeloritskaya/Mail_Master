@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+    <h2>Добавить новое сообщение</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Сохранить</button>
+    </form>
+    <a href="{% url 'mailing:all_messages' %}">Назад к списку сообщений</a>
+{% endblock %}

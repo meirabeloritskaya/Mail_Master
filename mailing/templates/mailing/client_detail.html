@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+    <div class="container mt-4">
+        <h2>{{ client.full_name }}</h2>
+
+        <p><strong>Email:</strong> {{ client.email }}</p>
+        <strong>Комментарий:</strong> {{ client.comment|default:"Нет комментариев" }}
+        <h3>Все доступные сообщения:</h3>
+        <ul class="list-group">
+            {% for message in all_messages %}
+                <li>
+                    {{ message.subject }}
+                    {% if message in client_messages %}
+                        (Уже связано с клиентом)
+                    {% else %}
+                        <form method="post" action="{% url 'mailing:client_detail' client.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="messages" value="{{ message.id }}">
+                            <button type="submit" class="btn btn-link">Отправить</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% empty %}
+                <li>Нет доступных сообщений.</li>
+            {% endfor %}
+        </ul>
+
+        <h3 class="mt-4">Сообщения, связанные с клиентом:</h3>
+        <ul class="list-group">
+            {% for message in client_messages %}
+                <li>{{ message.subject }}</li>
+            {% empty %}
+                <li>Нет сообщений для этого клиента.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

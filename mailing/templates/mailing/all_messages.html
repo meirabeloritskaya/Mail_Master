@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+    <h2>Все сообщения</h2>
+    <a href="{% url 'mailing:message_add' %}">Добавить новое сообщение</a>
+    <ul>
+        {% for message in messages %}
+            <li>
+                {{ message.subject }} - {{ message.body }}
+                <a href="{% url 'mailing:message_edit' message.pk %}">Редактировать</a>
+                <a href="{% url 'mailing:message_delete' message.pk %}">Удалить</a>
+            </li>
+        {% empty %}
+            <li>Нет сообщений.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'mailing:client_list' %}">Назад к списку клиентов</a>
+{% endblock %}

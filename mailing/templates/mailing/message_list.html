@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+
+    <h2>Сообщения для клиента {{ client.full_name }}</h2>
+    <ul>
+        {% for message in client.messages.all %}
+            <li>
+                {{ message.subject }} - {{ message.body }}
+                <a href="{% url 'mailing:message_delete' message.pk %}">Удалить</a>
+            </li>
+        {% empty %}
+            <li>Нет сообщений для этого клиента.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'mailing:client_list' %}">Назад к списку клиентов</a>
+{% endblock %}
