@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "mailing",
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -87,8 +88,8 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 STATIC_URL = "static/"
+
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
@@ -97,7 +98,8 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-# AUTH_USER_MODEL = "users.CustomUser"
+
+AUTH_USER_MODEL = "users.CustomUser"
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"

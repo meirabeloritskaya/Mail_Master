@@ -8,6 +8,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", mailing_views.home, name="home"),
     path("mailing/", include("mailing.urls")),
+    path("users/", include(("users.urls", "users"), namespace="users")),
 ]
 
 if settings.DEBUG:
