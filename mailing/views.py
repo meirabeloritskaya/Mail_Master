@@ -23,7 +23,7 @@ def home(request):
     active_newsletters = Newsletter.objects.filter(status="running").count()
 
     # Количество уникальных получателей
-    unique_recipients = Newsletter.objects.values("recipients").distinct().count()
+    unique_recipients = Client.objects.all().count()
 
     context = {
         "total_newsletters": total_newsletters,
