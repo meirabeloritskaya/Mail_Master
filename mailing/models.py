@@ -11,6 +11,11 @@ class Client(models.Model):
     def __str__(self):
         return self.full_name
 
+    def get_all_messages(self):
+        # Получаем все сообщения, связанные с рассылками этого клиента
+        messages = Message.objects.filter(newsletter__in=self.newsletters.all())
+        return messages
+
 
 class Message(models.Model):
     subject = models.CharField(max_length=255)
@@ -31,7 +36,8 @@ class Newsletter(models.Model):
         ("running", "Запущена"),
         ("completed", "Завершена"),
     ]
-
+    subject = models.CharField(max_length=200, default="Без темы")
+    start_date = models.DateTimeField(null=True, blank=True)
     sent_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="created")

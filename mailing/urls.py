@@ -34,11 +34,11 @@ urlpatterns = [
         views.newsletter_delete,
         name="newsletter_delete",
     ),
-    # path("newsletters/send/<int:client_id>/", views.send_newsletter, name="send_newsletter"),
     path("mailing/<int:pk>/", views.ClientDetailView.as_view(), name="client_detail"),
     path(
         "mailing/newsletters/send/client/<int:client_id>/",
         views.send_newsletter_to_client,
         name="send_newsletter_to_client",
     ),
+    path("newsletters/send/<int:pk>/", views.send_newsletter, name="send_newsletter"),
 ]

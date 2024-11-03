@@ -7,7 +7,7 @@ from django.views.generic import (
     DetailView,
 )
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Client, Message, Newsletter
+from .models import Client, Message, Newsletter, DeliveryAttempt
 from .forms import ClientForm, MessageForm, NewsletterForm
 from django.core.mail import send_mail
 from django.conf import settings
@@ -16,7 +16,22 @@ from django.contrib import messages
 
 
 def home(request):
-    return render(request, "mailing/home.html")
+    # Количество всех рассылок
+    total_newsletters = Newsletter.objects.count()
+
+    # Количество активных рассылок со статусом "запущено"
+    active_newsletters = Newsletter.objects.filter(status="running").count()
+
+    # Количество уникальных получателей
+    unique_recipients = Newsletter.objects.values("recipients").distinct().count()
+
+    context = {
+        "total_newsletters": total_newsletters,
+        "active_newsletters": active_newsletters,
+        "unique_recipients": unique_recipients,
+    }
+
+    return render(request, "mailing/home.html", context)
 
 
 def client_add(request):
@@ -49,30 +64,45 @@ class ClientDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Получаем клиента, объект которого представлен в DetailView
         client = self.object
 
-        # Получаем все сообщения
-        context["all_messages"] = Message.objects.all()  # Все сообщения
-        # Получаем сообщения, которые уже относятся к клиенту
+        # Все сообщения, связанные с клиентом через его рассылки
+        # context["all_messages"] = Message.objects.filter(newsletters__in=client.newsletters.all())
+
+        # Добавляем также отдельный список сообщений с учетом других критериев, если это нужно
         context["client_messages"] = Message.objects.filter(
-            client=client
-        )  # Сообщения для клиента
+            newsletters__recipients=client
+        )
+
+        context["unassigned_messages"] = Message.objects.exclude(
+            newsletters__recipients=client
+        )
+        # Можно передать и темы сообщений, если они специфичны
+
+        context["title_messages"] = Message.objects.filter(
+            newsletters__subject__in=client.newsletters.values("subject")
+        )
 
         return context
 
     def post(self, request, *args, **kwargs):
-        # Получаем клиента из DetailView
+        # Получаем объект клиента из DetailView
         self.object = self.get_object()
         client = self.object
 
-        # Обрабатываем отправку выбранных сообщений
+        # Извлекаем ID выбранных сообщений из формы
         message_ids = request.POST.getlist("messages")
         selected_messages = Message.objects.filter(id__in=message_ids)
 
         # Отправляем выбранные сообщения клиенту
         for message in selected_messages:
-            send_email(client.email, message.subject, message.body)
+            send_email(
+                client.email, message.subject, message.body
+            )  # Реализация send_email должна быть определена отдельно
 
+        # Отображаем сообщение об успешной отправке
         messages.success(request, "Выбранные сообщения были отправлены клиенту.")
         return redirect("mailing:client_detail", pk=client.pk)
 
@@ -235,38 +265,28 @@ def send_email(to_email, subject, message):
     )
 
 
-def send_newsletter(request, pk, client_id=None, ignore_date=False):
-    # Получаем рассылку
-    newsletter = get_object_or_404(Newsletter, pk=pk)
-
-    # Проверяем, если дата отправки ещё не наступила и ignore_date не установлен, прерываем отправку
-    if newsletter.sent_date > timezone.now() and not ignore_date:
-        # Возможно, добавить сообщение об ошибке и перенаправление
-        messages.error(request, "Дата отправки этой рассылки ещё не наступила.")
-        return redirect("mailing:newsletter_list")
-
-    # Устанавливаем статус "отправка началась"
-    newsletter.start_sending()
-
-    # Определяем получателей рассылки
-    recipients = newsletter.recipients.all()
-    if client_id:
-        # Если указан client_id, фильтруем только для конкретного клиента
-        recipients = recipients.filter(pk=client_id)
-
-    # Отправляем каждому получателю каждое сообщение
-    for recipient in recipients:
-        for message in newsletter.message.all():
-            send_email(recipient.email, message.subject, message.body)
-
-    # Устанавливаем статус "отправка завершена" и сохраняем
-    newsletter.complete_sending()
-    newsletter.save()
-
-    # Возвращаемся к списку рассылок или к странице клиента
-    if client_id:
-        return redirect("mailing:client_detail", pk=client_id)
-    return redirect("mailing:newsletter_list")
+#
+# def send_newsletter(newsletter, recipient_email):
+#     try:
+#         send_mail(
+#             subject=newsletter.subject,
+#             message=newsletter.message,
+#             from_email="meiramirth@example.com",
+#             recipient_list=[recipient_email],
+#         )
+#         DeliveryAttempt.objects.create(
+#             newsletter=newsletter,
+#             status="success",
+#             server_response="Successfully sent"
+#         )
+#     except Exception as e:
+#         # Сохраняем текст ошибки в server_response
+#         DeliveryAttempt.objects.create(
+#             newsletter=newsletter,
+#             status="failed",
+#             server_response=str(e)  # Сохраняем текст ошибки
+#         )
+#
 
 
 def send_newsletter_to_client(request, pk, client_id):
@@ -285,3 +305,40 @@ def send_newsletter_to_client(request, pk, client_id):
         request, "Сообщения из выбранной рассылки были отправлены клиенту."
     )
     return redirect("mailing:client_detail", pk=client.pk)
+
+
+def send_newsletter(request, pk):
+    newsletter = get_object_or_404(Newsletter, pk=pk)
+    recipients = newsletter.recipients.all()
+    for recipient in recipients:
+        try:
+            send_mail(
+                subject=newsletter.subject,
+                message=newsletter.message,
+                from_email="meiramirth@example.com",
+                recipient_list=[recipient.email],
+                fail_silently=False,
+            )
+            DeliveryAttempt.objects.create(
+                newsletter=newsletter, timestamp=timezone.now(), status="success"
+            )
+        except Exception as e:
+            DeliveryAttempt.objects.create(
+                newsletter=newsletter,
+                timestamp=timezone.now(),
+                status="failed",
+                server_response=str(e),
+            )
+
+            messages.error(
+                request, f"Ошибка при отправке для {recipient.email}: {str(e)}"
+            )
+
+    messages.success(request, "Рассылка успешно отправлена!")
+    return redirect("mailing:newsletter_list")
+
+
+def send_newsletter_view(request, newsletter_id):
+    newsletter = get_object_or_404(Newsletter, id=newsletter_id)
+    send_newsletter(newsletter)
+    return redirect("newsletter_list")
