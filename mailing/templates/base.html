@@ -8,10 +8,15 @@
 </head>
 <body>
     <header>
-        <h1>Добро пожаловать на MailMaster</h1>
+        {% if user.is_authenticated %}
+        <h1>Добро пожаловать, {{ user.first_name }} на MailMaster!</h1>
+    {% else %}
+        <h1>Добро пожаловать на MailMaster!</h1>
+    {% endif %}
     </header>
     <div>
         {% block content %}{% endblock %}
     </div>
+
 </body>
 </html>

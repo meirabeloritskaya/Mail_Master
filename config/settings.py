@@ -1,13 +1,15 @@
+from dotenv import load_dotenv
 from pathlib import Path
 import os
 
+load_dotenv(override=True)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = "django-insecure-%+8757-4ev$&qbdb6attzlc#nm(^@g$baijoiy*7ek^kbfwm+b"
 
 
-DEBUG = True
+DEBUG = True if os.getenv("DEBUG") == "True" else False
 
 ALLOWED_HOSTS = []
 
@@ -87,8 +89,15 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# AUTH_USER_MODEL = "users.CustomUser"
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
@@ -99,3 +108,8 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 SERVER_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# LOGIN_REDIRECT_URL = "/"
+# LOGOUT_REDIRECT_URL = "/"
+
+# REGISTER_REDIRECT_URL = "/users/login/"
