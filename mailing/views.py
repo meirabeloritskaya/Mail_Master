@@ -150,84 +150,81 @@ class MessageDeleteView(DeleteView):
     success_url = reverse_lazy("mailing:message_list")
 
 
-def newsletter_create(request):
-    clients = Client.objects.all()
-    messages = Message.objects.all()
+class NewsletterCreateView(CreateView):
+    model = Newsletter
+    form_class = NewsletterForm
+    template_name = "mailing/newsletter_form.html"
 
-    if request.method == "POST":
-        form = NewsletterForm(request.POST)
-        if form.is_valid():
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['clients'] = Client.objects.all()
+        context['messages'] = Message.objects.all()
+        return context
 
-            newsletter = form.save(commit=False)
-            newsletter.save()
+    def form_valid(self, form):
+        newsletter = form.save(commit=False)
 
-            message_ids = request.POST.getlist("messages")
-            recipient_ids = request.POST.getlist("recipients")
-            newsletter.message.set(message_ids)
-            newsletter.recipients.set(recipient_ids)
-            newsletter.save()
-            return redirect("mailing:newsletter_list")
-        else:
-            print(form.errors)
-    else:
-        form = NewsletterForm()
-        clients = Client.objects.all()
-        messages = Message.objects.all()
-    return render(
-        request,
-        "mailing/newsletter_form.html",
-        {"form": form, "clients": clients, "messages": messages},
-    )
+        # Сначала сохраняем рассылку
+        newsletter.save()
 
+        # Получаем выбранные сообщения и получателей
+        message_ids = self.request.POST.getlist("messages")
+        recipient_ids = self.request.POST.getlist("recipients")
+        newsletter.message.set(message_ids)  # Устанавливаем выбранные сообщения
+        newsletter.recipients.set(recipient_ids)  # Устанавливаем получателей
 
-def newsletter_edit(request, pk):
-    newsletter = get_object_or_404(Newsletter, pk=pk)
-    clients = Client.objects.all()
-    messages = Message.objects.all()
+        return super().form_valid(form)
 
-    if request.method == "POST":
-        form = NewsletterForm(request.POST, instance=newsletter)
-        if form.is_valid():
-            newsletter = form.save(commit=False)
-
-            # Получаем выбранные сообщения и получателей
-            selected_messages = request.POST.getlist("messages")
-            selected_recipients = request.POST.getlist("recipients")
-
-            # Обновляем сообщения
-            newsletter.save()  # Сначала сохраняем рассылку
-            newsletter.message.set(
-                selected_messages
-            )  # Устанавливаем выбранные сообщения
-            newsletter.recipients.set(selected_recipients)  # Устанавливаем получателей
-
-            return redirect("mailing:newsletter_list")
-    else:
-        form = NewsletterForm(instance=newsletter)
-
-    return render(
-        request,
-        "mailing/newsletter_form.html",
-        {
-            "form": form,
-            "clients": clients,
-            "messages": messages,
-            "newsletter": newsletter,
-        },
-    )
+    def get_success_url(self):
+        return reverse_lazy("mailing:newsletter_list")
 
 
-def newsletter_list(request):
-    newsletters = Newsletter.objects.all()
-    return render(request, "mailing/newsletter_list.html", {"newsletters": newsletters})
+class NewsletterUpdateView(UpdateView):
+    model = Newsletter
+    form_class = NewsletterForm
+    template_name = "mailing/newsletter_form.html"
+    context_object_name = "newsletter"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['clients'] = Client.objects.all()
+        context['messages'] = Message.objects.all()
+        return context
+
+    def form_valid(self, form):
+        newsletter = form.save(commit=False)
+
+        # Получаем выбранные сообщения и получателей
+        selected_messages = self.request.POST.getlist("messages")
+        selected_recipients = self.request.POST.getlist("recipients")
+
+        # Сначала сохраняем рассылку
+        newsletter.save()
+        newsletter.message.set(selected_messages)  # Устанавливаем выбранные сообщения
+        newsletter.recipients.set(selected_recipients)  # Устанавливаем получателей
+
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("mailing:newsletter_list")
 
 
-def newsletter_delete(request, pk):
-    newsletter = get_object_or_404(Newsletter, pk=pk)
-    if request.method == "POST":
-        newsletter.delete()
-        return redirect("mailing:newsletter_list")
-    return render(request, "mailing/newsletter_delete.html", {"newsletter": newsletter})
+class NewsletterListView(ListView):
+    model = Newsletter
+    template_name = "mailing/newsletter_list.html"
+    context_object_name = "newsletters"
+
+
+class NewsletterDeleteView(DeleteView):
+    model = Newsletter
+    template_name = "mailing/newsletter_delete.html"
+    context_object_name = "newsletter"
+    success_url = reverse_lazy("mailing:newsletter_list")
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        return redirect(self.get_success_url())
 
 
 def send_email(to_email, subject, message):

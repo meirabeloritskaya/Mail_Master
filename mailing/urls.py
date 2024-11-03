@@ -21,12 +21,12 @@ urlpatterns = [
     path("messages/", views.MessagesListView.as_view(), name="message_list"),
     path("messages/edit/<int:pk>/", views.MessageEditView.as_view(), name="message_edit"),
     path("messages/delete/<int:pk>/", views.MessageDeleteView.as_view(), name="message_delete"),
-    path("newsletters/add/", views.newsletter_create, name="newsletter_add"),
-    path("newsletters/", views.newsletter_list, name="newsletter_list"),
-    path("newsletters/<int:pk>/edit/", views.newsletter_edit, name="newsletter_edit"),
+    path("newsletters/add/", views.NewsletterCreateView.as_view(), name="newsletter_add"),
+    path("newsletters/", views.NewsletterListView.as_view(), name="newsletter_list"),
+    path("newsletters/<int:pk>/edit/", views.NewsletterUpdateView.as_view(), name="newsletter_edit"),
     path(
         "newsletters/delete/<int:pk>/",
-        views.newsletter_delete,
+        views.NewsletterDeleteView.as_view(),
         name="newsletter_delete",
     ),
     path(
