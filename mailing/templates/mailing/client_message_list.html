@@ -2,17 +2,16 @@
 
 {% block content %}
     {% include "mailing/navbar.html" %}
-    <h2>Все сообщения</h2>
-    <a href="{% url 'mailing:message_add' %}">Добавить новое сообщение</a>
+
+    <h2>Сообщения для клиента {{ client.full_name }}</h2>
     <ul>
-        {% for message in messages %}
+        {% for message in message.message_list %}
             <li>
                 {{ message.subject }} - {{ message.body }}
-                <a href="{% url 'mailing:message_edit' message.pk %}">Редактировать</a>
                 <a href="{% url 'mailing:message_delete' message.pk %}">Удалить</a>
             </li>
         {% empty %}
-            <li>Нет сообщений.</li>
+            <li>Нет сообщений для этого клиента.</li>
         {% endfor %}
     </ul>
     <a href="{% url 'mailing:client_list' %}">Назад к списку клиентов</a>

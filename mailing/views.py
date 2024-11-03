@@ -34,29 +34,6 @@ def home(request):
     return render(request, "mailing/home.html", context)
 
 
-def client_add(request):
-    if request.method == "POST":
-        form = ClientForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("mailing:client_list")
-    else:
-        form = ClientForm()
-    return render(request, "mailing/client_form.html", {"form": form})
-
-
-def client_edit(request, pk):
-    client = get_object_or_404(Client, pk=pk)
-    if request.method == "POST":
-        form = ClientForm(request.POST, instance=client)
-        if form.is_valid():
-            form.save()
-            return redirect("mailing:client_list")
-    else:
-        form = ClientForm(instance=client)
-    return render(request, "mailing/client_form.html", {"form": form, "client": client})
-
-
 class ClientDetailView(DetailView):
     model = Client
     template_name = "mailing/client_detail.html"
@@ -133,46 +110,44 @@ class ClientDeleteView(DeleteView):
     success_url = reverse_lazy("mailing:client_list")
 
 
-def message_create(request):
-    if request.method == "POST":
-        form = MessageForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("mailing:all_messages")
-    else:
-        form = MessageForm()
-    return render(request, "mailing/message_form.html", {"form": form})
+class MessageCreateView(CreateView):
+    model = Message
+    form_class = MessageForm
+    template_name = "mailing/message_form.html"
+    success_url = reverse_lazy("mailing:message_list")
 
 
-def all_messages(request):
-    messages = Message.objects.all()
-    return render(request, "mailing/all_messages.html", {"messages": messages})
+class MessagesListView(ListView):
+    model = Message
+    template_name = "mailing/message_list.html"
+    context_object_name = "message_list"
 
 
-def message_list(request, client_id):
-    client = get_object_or_404(Client, id=client_id)
-    messages = Message.objects.filter(client=client)
-    return render(
-        request, "mailing/message_list.html", {"messages": messages, "client": client}
-    )
+class MessageClientView(ListView):
+    template_name = "mailing/client_message_list.html"
+    context_object_name = "client_message_list"
+
+    def get_queryset(self):
+        self.client = get_object_or_404(Client, id=self.kwargs["client_id"])
+        return Message.objects.filter(client=self.client)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["client"] = self.client
+        return context
 
 
-def message_edit(request, pk):
-    message = get_object_or_404(Message, pk=pk)
-    if request.method == "POST":
-        message.subject = request.POST["subject"]
-        message.body = request.POST["body"]
-        message.save()
-        return redirect("mailing:message_list")
-    return render(request, "mailing/message_edit.html", {"message": message})
+class MessageEditView(UpdateView):
+    model = Message
+    form_class = MessageForm
+    template_name = "mailing/message_edit.html"
+    success_url = reverse_lazy("mailing:message_list")
 
 
-def message_delete(request, pk):
-    message = get_object_or_404(Message, pk=pk)
-    if request.method == "POST":
-        message.delete()
-        return redirect("mailing:message_list")
-    return render(request, "mailing/message_delete.html", {"message": message})
+class MessageDeleteView(DeleteView):
+    model = Message
+    template_name = "mailing/message_delete.html"
+    success_url = reverse_lazy("mailing:message_list")
 
 
 def newsletter_create(request):
