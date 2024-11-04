@@ -5,7 +5,7 @@
 
     <h2>Сообщения для клиента {{ client.full_name }}</h2>
     <ul>
-        {% for message in message.message_list %}
+        {% for message in related_messages %}
             <li>
                 {{ message.subject }} - {{ message.body }}
                 <a href="{% url 'mailing:message_delete' message.pk %}">Удалить</a>

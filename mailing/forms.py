@@ -33,8 +33,8 @@ class NewsletterForm(forms.ModelForm):
 
     class Meta:
         model = Newsletter
-        fields = ["sent_date", "end_date", "message", "recipients"]
+        fields = ["sent_date", "end_date", "messages", "recipients"]
         widgets = {
             "recipients": forms.CheckboxSelectMultiple(),
-            "message": forms.CheckboxSelectMultiple(),
+            "messages": forms.CheckboxSelectMultiple(),
         }

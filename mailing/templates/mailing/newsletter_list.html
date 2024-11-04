@@ -8,7 +8,7 @@
             <li>
                 <strong>Сообщения:</strong>
                     <ul>
-                        {% for message in newsletter.message.all %}
+                        {% for message in newsletter.messages.all %}
                             <li>{{ message.subject }}</li>
                         {% empty %}
                             <li>Нет сообщений</li>

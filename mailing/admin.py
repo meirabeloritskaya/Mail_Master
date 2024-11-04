@@ -20,7 +20,7 @@ class NewsletterAdmin(admin.ModelAdmin):
     list_display = ("subject", "status", "start_date", "end_date")
     list_filter = ("status",)
     search_fields = ("subject",)
-    filter_horizontal = ("message", "recipients")
+    filter_horizontal = ("messages", "recipients")
 
 
 @admin.register(DeliveryAttempt)

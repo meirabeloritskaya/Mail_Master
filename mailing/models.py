@@ -42,7 +42,7 @@ class Newsletter(models.Model):
     end_date = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="created")
 
-    message = models.ManyToManyField(Message, related_name="newsletters", blank=True)
+    messages = models.ManyToManyField(Message, related_name="newsletters", blank=True)
     recipients = models.ManyToManyField(Client, blank=True)
 
     def save(self, *args, **kwargs):
@@ -57,7 +57,7 @@ class Newsletter(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Newsletter: {', '.join(message.subject for message in self.message.all()) if self.message.exists() else 'Нет сообщений'}"
+        return f"Newsletter: {', '.join(message.subject for message in self.messages.all()) if self.messages.exists() else 'Нет сообщений'}"
 
     def start_sending(self):
         self.status = "running"

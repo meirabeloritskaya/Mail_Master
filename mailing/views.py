@@ -45,13 +45,15 @@ class ClientDetailView(DetailView):
         # Получаем клиента, объект которого представлен в DetailView
         client = self.object
 
-        # Все сообщения, связанные с клиентом через его рассылки
-        # context["all_messages"] = Message.objects.filter(newsletters__in=client.newsletters.all())
+        # # Все сообщения, связанные с клиентом через его рассылки
+        # context["client_messages"] = Message.objects.filter(newsletters__recipients=client)
+        #
+        # # Добавляем также отдельный список сообщений с учетом других критериев, если это нужно
+        # context["client_messages"] = Message.objects.filter(
+        #     newsletters__recipients=client
+        # )
 
-        # Добавляем также отдельный список сообщений с учетом других критериев, если это нужно
-        context["client_messages"] = Message.objects.filter(
-            newsletters__recipients=client
-        )
+        context['related_messages'] = self.object.messages.all()
 
         context["unassigned_messages"] = Message.objects.exclude(
             newsletters__recipients=client
@@ -170,7 +172,7 @@ class NewsletterCreateView(CreateView):
         # Получаем выбранные сообщения и получателей
         message_ids = self.request.POST.getlist("messages")
         recipient_ids = self.request.POST.getlist("recipients")
-        newsletter.message.set(message_ids)  # Устанавливаем выбранные сообщения
+        newsletter.messages.set(message_ids)  # Устанавливаем выбранные сообщения
         newsletter.recipients.set(recipient_ids)  # Устанавливаем получателей
 
         return super().form_valid(form)
@@ -200,7 +202,7 @@ class NewsletterUpdateView(UpdateView):
 
         # Сначала сохраняем рассылку
         newsletter.save()
-        newsletter.message.set(selected_messages)  # Устанавливаем выбранные сообщения
+        newsletter.messages.set(selected_messages)  # Устанавливаем выбранные сообщения
         newsletter.recipients.set(selected_recipients)  # Устанавливаем получателей
 
         return super().form_valid(form)
@@ -214,6 +216,20 @@ class NewsletterListView(ListView):
     template_name = "mailing/newsletter_list.html"
     context_object_name = "newsletters"
 
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     # Получаем все сообщения для всех рассылок
+    #     newsletters = self.object_list  # Список всех рассылок
+    #     messages_dict = {}
+    #
+    #     for newsletter in newsletters:
+    #         messages_dict[newsletter.pk] = newsletter.message.all()  # Получаем все сообщения, связанные с данной рассылкой
+    #
+    #     context['messages_dict'] = messages_dict  # Передаем словарь сообщений в контекст
+    #     return context
+
+    def get_queryset(self):
+        return Newsletter.objects.prefetch_related('messages', 'recipients')
 
 class NewsletterDeleteView(DeleteView):
     model = Newsletter
@@ -267,7 +283,7 @@ def send_newsletter_to_client(request, pk, client_id):
     newsletter = get_object_or_404(Newsletter, pk=pk)
 
     # Получаем список сообщений для рассылки
-    selected_messages = newsletter.message.all()
+    selected_messages = newsletter.messages.all()
 
     # Отправляем выбранные сообщения клиенту
     for message in selected_messages:
