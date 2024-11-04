@@ -16,14 +16,30 @@ urlpatterns = [
         views.ClientDeleteView.as_view(),
         name="client_delete",
     ),
-    path("mailing/<int:client_id>/messages/", views.MessageClientView.as_view(), name="client_message_list"),
+    path(
+        "mailing/<int:client_id>/messages/",
+        views.MessageClientView.as_view(),
+        name="client_message_list",
+    ),
     path("messages/add/", views.MessageCreateView.as_view(), name="message_add"),
     path("messages/", views.MessagesListView.as_view(), name="message_list"),
-    path("messages/edit/<int:pk>/", views.MessageEditView.as_view(), name="message_edit"),
-    path("messages/delete/<int:pk>/", views.MessageDeleteView.as_view(), name="message_delete"),
-    path("newsletters/add/", views.NewsletterCreateView.as_view(), name="newsletter_add"),
+    path(
+        "messages/edit/<int:pk>/", views.MessageEditView.as_view(), name="message_edit"
+    ),
+    path(
+        "messages/delete/<int:pk>/",
+        views.MessageDeleteView.as_view(),
+        name="message_delete",
+    ),
+    path(
+        "newsletters/add/", views.NewsletterCreateView.as_view(), name="newsletter_add"
+    ),
     path("newsletters/", views.NewsletterListView.as_view(), name="newsletter_list"),
-    path("newsletters/<int:pk>/edit/", views.NewsletterUpdateView.as_view(), name="newsletter_edit"),
+    path(
+        "newsletters/<int:pk>/edit/",
+        views.NewsletterUpdateView.as_view(),
+        name="newsletter_edit",
+    ),
     path(
         "newsletters/delete/<int:pk>/",
         views.NewsletterDeleteView.as_view(),

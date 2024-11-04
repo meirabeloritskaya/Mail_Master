@@ -6,12 +6,12 @@ load_dotenv(override=True)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = "django-insecure-%+8757-4ev$&qbdb6attzlc#nm(^@g$baijoiy*7ek^kbfwm+b"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 
 DEBUG = True if os.getenv("DEBUG") == "True" else False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 INSTALLED_APPS = [
@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "mailing",
-    'users',
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -40,7 +40,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -111,7 +111,7 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 SERVER_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-# LOGIN_REDIRECT_URL = "/"
-# LOGOUT_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
-# REGISTER_REDIRECT_URL = "/users/login/"
+REGISTER_REDIRECT_URL = "/users/login/"
