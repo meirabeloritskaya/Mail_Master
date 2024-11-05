@@ -45,23 +45,13 @@ class ClientDetailView(DetailView):
         # Получаем клиента, объект которого представлен в DetailView
         client = self.object
 
-        # # Все сообщения, связанные с клиентом через его рассылки
-        # context["client_messages"] = Message.objects.filter(newsletters__recipients=client)
-        #
-        # # Добавляем также отдельный список сообщений с учетом других критериев, если это нужно
-        # context["client_messages"] = Message.objects.filter(
-        #     newsletters__recipients=client
-        # )
-
         context['related_messages'] = self.object.messages.all()
 
-        context["unassigned_messages"] = Message.objects.exclude(
+        context["client_message_list"] = Message.objects.filter(
             newsletters__recipients=client
         )
-        # Можно передать и темы сообщений, если они специфичны
-
-        context["title_messages"] = Message.objects.filter(
-            newsletters__subject__in=client.newsletters.values("subject")
+        context["unassigned_messages"] = Message.objects.exclude(
+            newsletters__recipients=client
         )
 
         return context
