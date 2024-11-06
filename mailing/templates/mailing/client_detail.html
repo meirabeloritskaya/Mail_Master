@@ -17,19 +17,22 @@
         </ul>
 
         <h3 class="mt-4">Сообщения, которые еще не назначены клиенту:</h3>
-        <ul class="list-group">
-            {% for message in unassigned_messages %}
-                <li class="list-group-item">
-                    {{ message.subject }}
-                    <form method="post" action="{% url 'mailing:client_detail' client.pk %}" style="display:inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="messages" value="{{ message.id }}">
-                        <button type="submit" class="btn btn-link">Отправить</button>
-                    </form>
-                </li>
-            {% empty %}
-                <li class="list-group-item">Нет сообщений для назначения.</li>
-            {% endfor %}
-        </ul>
+
+        <form method="post" action="{% url 'mailing:client_detail' client.pk %}">
+            {% csrf_token %}
+            <ul class="list-group">
+                {% for message in unassigned_messages %}
+                    <li class="list-group-item">
+                        <input type="checkbox" name="messages" value="{{ message.id }}">
+                        {{ message.subject }}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">Нет сообщений для назначения.</li>
+                {% endfor %}
+            </ul>
+
+            <!-- Кнопка отправки сообщений -->
+            <button type="submit" class="btn btn-primary mt-3">Отправить выбранные сообщения</button>
+        </form>
     </div>
 {% endblock %}

@@ -25,7 +25,7 @@
                         <li>Нет получателей</li>
                     {% endfor %}
                 </ul>
-                <a href="{% url 'mailing:send_newsletter' newsletter.pk %}">Отправить</a>
+                <a href="{% url 'mailing:send_newsletter' newsletter.pk %}" class="btn btn-primary">Отправить</a>
                 <a href="{% url 'mailing:newsletter_edit' newsletter.pk %}">Редактировать</a>
                 <a href="{% url 'mailing:newsletter_delete' newsletter.pk %}">Удалить</a>
             </li>

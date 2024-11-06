@@ -30,7 +30,7 @@ class Message(models.Model):
 
 
 class Newsletter(models.Model):
-    # client = models.ForeignKey(Client, related_name='newsletters', on_delete=models.CASCADE, null=True)
+
     STATUS_CHOICES = [
         ("created", "Создана"),
         ("running", "Запущена"),

@@ -46,9 +46,10 @@ urlpatterns = [
         name="newsletter_delete",
     ),
     path(
-        "mailing/newsletters/send/client/<int:client_id>/",
-        views.send_newsletter_to_client,
-        name="send_newsletter_to_client",
+        "mailing/<int:pk>/send/",
+        views.ClientDetailView.as_view(),  # Это будет обработка формы отправки сообщений для клиента
+        name="client_detail",
     ),
+    # Путь для отправки рассылки
     path("newsletters/send/<int:pk>/", views.send_newsletter, name="send_newsletter"),
 ]

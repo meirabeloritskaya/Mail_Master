@@ -45,7 +45,7 @@ class ClientDetailView(DetailView):
         # Получаем клиента, объект которого представлен в DetailView
         client = self.object
 
-        context['related_messages'] = self.object.messages.all()
+        context["related_messages"] = self.object.messages.all()
 
         context["client_message_list"] = Message.objects.filter(
             newsletters__recipients=client
@@ -67,9 +67,7 @@ class ClientDetailView(DetailView):
 
         # Отправляем выбранные сообщения клиенту
         for message in selected_messages:
-            send_email(
-                client.email, message.subject, message.body
-            )  # Реализация send_email должна быть определена отдельно
+            send_email(client.email, message.subject, message.body)
 
         # Отображаем сообщение об успешной отправке
         messages.success(request, "Выбранные сообщения были отправлены клиенту.")
@@ -206,20 +204,9 @@ class NewsletterListView(ListView):
     template_name = "mailing/newsletter_list.html"
     context_object_name = "newsletters"
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     # Получаем все сообщения для всех рассылок
-    #     newsletters = self.object_list  # Список всех рассылок
-    #     messages_dict = {}
-    #
-    #     for newsletter in newsletters:
-    #         messages_dict[newsletter.pk] = newsletter.message.all()  # Получаем все сообщения, связанные с данной рассылкой
-    #
-    #     context['messages_dict'] = messages_dict  # Передаем словарь сообщений в контекст
-    #     return context
-
     def get_queryset(self):
-        return Newsletter.objects.prefetch_related('messages', 'recipients')
+        return Newsletter.objects.prefetch_related("messages", "recipients")
+
 
 class NewsletterDeleteView(DeleteView):
     model = Newsletter
@@ -243,7 +230,6 @@ def send_email(to_email, subject, message):
     )
 
 
-#
 # def send_newsletter(newsletter, recipient_email):
 #     try:
 #         send_mail(
@@ -264,59 +250,62 @@ def send_email(to_email, subject, message):
 #             status="failed",
 #             server_response=str(e)  # Сохраняем текст ошибки
 #         )
-#
 
 
-def send_newsletter_to_client(request, pk, client_id):
+def send_newsletter(request, pk):
     # Получаем клиента и рассылку
-    client = get_object_or_404(Client, pk=client_id)
     newsletter = get_object_or_404(Newsletter, pk=pk)
+
+    # Получаем клиентов
+    recipients = newsletter.recipients.all()
 
     # Получаем список сообщений для рассылки
     selected_messages = newsletter.messages.all()
 
-    # Отправляем выбранные сообщения клиенту
-    for message in selected_messages:
-        send_email(client.email, message.subject, message.body)
+    for recipient in recipients:
+
+        # Отправляем выбранные сообщения клиенту
+        for message in selected_messages:
+            send_email(recipient.email, message.subject, message.body)
 
     messages.success(
         request, "Сообщения из выбранной рассылки были отправлены клиенту."
     )
-    return redirect("mailing:client_detail", pk=client.pk)
-
-
-def send_newsletter(request, pk):
-    newsletter = get_object_or_404(Newsletter, pk=pk)
-    recipients = newsletter.recipients.all()
-    for recipient in recipients:
-        try:
-            send_mail(
-                subject=newsletter.subject,
-                message=newsletter.message,
-                from_email="meiramirth@example.com",
-                recipient_list=[recipient.email],
-                fail_silently=False,
-            )
-            DeliveryAttempt.objects.create(
-                newsletter=newsletter, timestamp=timezone.now(), status="success"
-            )
-        except Exception as e:
-            DeliveryAttempt.objects.create(
-                newsletter=newsletter,
-                timestamp=timezone.now(),
-                status="failed",
-                server_response=str(e),
-            )
-
-            messages.error(
-                request, f"Ошибка при отправке для {recipient.email}: {str(e)}"
-            )
-
-    messages.success(request, "Рассылка успешно отправлена!")
     return redirect("mailing:newsletter_list")
 
 
-def send_newsletter_view(request, newsletter_id):
-    newsletter = get_object_or_404(Newsletter, id=newsletter_id)
-    send_newsletter(newsletter)
-    return redirect("newsletter_list")
+# def send_newsletter(request, pk):
+#     newsletter = get_object_or_404(Newsletter, pk=pk)
+#     recipients = newsletter.recipients.all()
+#     for recipient in recipients:
+#         try:
+#             send_mail(
+#                 subject=newsletter.subject,
+#                 message=newsletter.message,
+#                 from_email="meiramirth@gmail.com",
+#                 recipient_list=[recipient.email],
+#                 fail_silently=False,
+#             )
+#             DeliveryAttempt.objects.create(
+#                 newsletter=newsletter, timestamp=timezone.now(), status="success"
+#             )
+#         except Exception as e:
+#             DeliveryAttempt.objects.create(
+#                 newsletter=newsletter,
+#                 timestamp=timezone.now(),
+#                 status="failed",
+#                 server_response=str(e),
+#             )
+#
+#             messages.error(
+#                 request, f"Ошибка при отправке для {recipient.email}: {str(e)}"
+#             )
+#
+#     messages.success(request, "Рассылка успешно отправлена!")
+#     return redirect("mailing:newsletter_list")
+
+
+# def send_newsletter_view(request, newsletter_id):
+#     newsletter = get_object_or_404(Newsletter, id=newsletter_id)
+#     send_newsletter(newsletter)
+#     return redirect("newsletter_list")
