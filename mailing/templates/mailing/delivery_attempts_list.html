@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "mailing/navbar.html" %}
+    <div class="container mt-4">
+        <h2>Статистика попыток рассылок</h2>
+        <p>Успешных попыток: {{ success_count }}</p>
+        <p>Неуспешных попыток: {{ failed_count }}</p>
+
+        <ul class="list-group mt-4">
+            {% for attempt in attempts %}
+                <li class="list-group-item">
+                    <strong>Сообщения:</strong>
+                    <ul>
+                        {% for message in attempt.newsletter.messages.all %}
+                            <li>{{ message.subject }}</li>
+                        {% empty %}
+                            <li>Нет сообщений</li>
+                        {% endfor %}
+                    </ul>
+
+                    <strong>Дата и время:</strong> {{ attempt.timestamp }}<br>
+                    <strong>Статус:</strong> {{ attempt.get_status_display }}<br>
+                    <strong>Ответ сервера:</strong> {{ attempt.server_response }}<br>
+
+
+
+
+                </li>
+            {% empty %}
+                <li class="list-group-item">Нет попыток отправки рассылок.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

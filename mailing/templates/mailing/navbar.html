@@ -7,7 +7,7 @@
         <a class="p-2 btn btn-primary" href="{% url 'mailing:client_list' %}">Список клиентов</a>
         <a class="p-2 btn btn-primary" href="{% url 'mailing:message_list' %}">Список сообщений</a>
         <a class="p-2 btn btn-primary" href="{% url 'mailing:newsletter_list' %}">Список рассылок</a>
-
+        <a class="p-2 btn btn-primary" href="{% url 'mailing:delivery_attempts_list' %}">Попытки рассылок</a>
         {% if user.is_authenticated %}
             <form action="{% url 'users:logout' %}" method="post" style="display:inline;">
             {% csrf_token %}

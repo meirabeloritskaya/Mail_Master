@@ -47,9 +47,13 @@ urlpatterns = [
     ),
     path(
         "mailing/<int:pk>/send/",
-        views.ClientDetailView.as_view(),  # Это будет обработка формы отправки сообщений для клиента
+        views.ClientDetailView.as_view(),
         name="client_detail",
     ),
-    # Путь для отправки рассылки
     path("newsletters/send/<int:pk>/", views.send_newsletter, name="send_newsletter"),
+    path(
+        "delivery_attempts/",
+        views.DeliveryAttemptListView.as_view(),
+        name="delivery_attempts_list",
+    ),
 ]

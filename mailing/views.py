@@ -230,82 +230,56 @@ def send_email(to_email, subject, message):
     )
 
 
-# def send_newsletter(newsletter, recipient_email):
-#     try:
-#         send_mail(
-#             subject=newsletter.subject,
-#             message=newsletter.message,
-#             from_email="meiramirth@example.com",
-#             recipient_list=[recipient_email],
-#         )
-#         DeliveryAttempt.objects.create(
-#             newsletter=newsletter,
-#             status="success",
-#             server_response="Successfully sent"
-#         )
-#     except Exception as e:
-#         # Сохраняем текст ошибки в server_response
-#         DeliveryAttempt.objects.create(
-#             newsletter=newsletter,
-#             status="failed",
-#             server_response=str(e)  # Сохраняем текст ошибки
-#         )
-
-
 def send_newsletter(request, pk):
-    # Получаем клиента и рассылку
+
     newsletter = get_object_or_404(Newsletter, pk=pk)
 
-    # Получаем клиентов
     recipients = newsletter.recipients.all()
 
-    # Получаем список сообщений для рассылки
     selected_messages = newsletter.messages.all()
 
     for recipient in recipients:
+        try:
+            # Отправляем выбранные сообщения клиенту
+            for message in selected_messages:
+                send_email(recipient.email, message.subject, message.body)
 
-        # Отправляем выбранные сообщения клиенту
-        for message in selected_messages:
-            send_email(recipient.email, message.subject, message.body)
+            DeliveryAttempt.objects.create(
+                newsletter=newsletter,
+                timestamp=timezone.now(),
+                status="success",
+                server_response="Сообщение успешно отправлено",
+            )
+        except Exception as e:
 
-    messages.success(
-        request, "Сообщения из выбранной рассылки были отправлены клиенту."
-    )
+            DeliveryAttempt.objects.create(
+                newsletter=newsletter,
+                timestamp=timezone.now(),
+                status="failed",
+                server_response=str(e),
+            )
+            messages.error(
+                request, f"Ошибка при отправке для {recipient.email}: {str(e)}"
+            )
+
+    messages.success(request, "Рассылка успешно отправлена!")
     return redirect("mailing:newsletter_list")
 
 
-# def send_newsletter(request, pk):
-#     newsletter = get_object_or_404(Newsletter, pk=pk)
-#     recipients = newsletter.recipients.all()
-#     for recipient in recipients:
-#         try:
-#             send_mail(
-#                 subject=newsletter.subject,
-#                 message=newsletter.message,
-#                 from_email="meiramirth@gmail.com",
-#                 recipient_list=[recipient.email],
-#                 fail_silently=False,
-#             )
-#             DeliveryAttempt.objects.create(
-#                 newsletter=newsletter, timestamp=timezone.now(), status="success"
-#             )
-#         except Exception as e:
-#             DeliveryAttempt.objects.create(
-#                 newsletter=newsletter,
-#                 timestamp=timezone.now(),
-#                 status="failed",
-#                 server_response=str(e),
-#             )
-#
-#             messages.error(
-#                 request, f"Ошибка при отправке для {recipient.email}: {str(e)}"
-#             )
-#
-#     messages.success(request, "Рассылка успешно отправлена!")
-#     return redirect("mailing:newsletter_list")
+class DeliveryAttemptListView(ListView):
+    model = DeliveryAttempt
+    template_name = "mailing/delivery_attempts_list.html"
+    context_object_name = "attempts"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["success_count"] = DeliveryAttempt.objects.filter(
+            status="success"
+        ).count()
+        context["failed_count"] = DeliveryAttempt.objects.filter(
+            status="failed"
+        ).count()
+        return context
 
 
-# def send_newsletter_view(request, newsletter_id):
-#     newsletter = get_object_or_404(Newsletter, id=newsletter_id)
-#     send_newsletter(newsletter)
-#     return redirect("newsletter_list")
+#
