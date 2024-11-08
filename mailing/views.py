@@ -135,9 +135,9 @@ class ClientDeleteView(DeleteView):
     success_url = reverse_lazy("mailing:client_list")
 
     def post(self, request, *args, **kwargs):
-        product = self.get_object()
+        client = self.get_object()
 
-        if not self.user_has_permission(product):
+        if not self.user_has_permission(client):
             messages.error(request, "У вас нет прав на удаление информации о клиенте.")
             return HttpResponseRedirect(
                 request.META.get("HTTP_REFERER", self.success_url)
@@ -199,9 +199,9 @@ class MessageEditView(UpdateView):
     success_url = reverse_lazy("mailing:message_list")
 
     def form_valid(self, form):
-        product = self.get_object()
+        message = self.get_object()
 
-        if not self.user_has_permission(product):
+        if not self.user_has_permission(message):
             messages.error(self.request, "У вас нет прав на редактирование продукта.")
             return HttpResponseRedirect(
                 self.request.META.get("HTTP_REFERER", self.success_url)
@@ -223,9 +223,9 @@ class MessageDeleteView(DeleteView):
     success_url = reverse_lazy("mailing:message_list")
 
     def post(self, request, *args, **kwargs):
-        product = self.get_object()
+        message = self.get_object()
 
-        if not self.user_has_permission(product):
+        if not self.user_has_permission(message):
             messages.error(request, "У вас нет прав на удаление сообщения.")
             return HttpResponseRedirect(
                 request.META.get("HTTP_REFERER", self.success_url)
@@ -388,6 +388,14 @@ class DeliveryAttemptListView(ListView):
             status="failed"
         ).count()
         return context
+
+    def get_queryset(self):
+        if (
+            self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Менеджер").exists()
+        ):
+            return DeliveryAttempt.objects.all()
+        return DeliveryAttempt.objects.filter(newsletter__owner=self.request.user)
 
 
 class ClientBlockView(PermissionRequiredMixin, UpdateView):
