@@ -16,25 +16,41 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from django.contrib import messages
+from users.models import CustomUser
 
 
 def home(request):
-    # Количество всех рассылок
+    # Проверка, является ли пользователь менеджером
+    is_manager = request.user.groups.filter(name='Менеджер').exists()
+
+    # Статистика, доступная всем пользователям
     total_newsletters = Newsletter.objects.count()
-
-    # Количество активных рассылок со статусом "запущено"
     active_newsletters = Newsletter.objects.filter(status="running").count()
+    unique_recipients = Client.objects.count()
 
-    # Количество уникальных получателей
-    unique_recipients = Client.objects.all().count()
+    # Дополнительная статистика для менеджера
+    total_clients = Client.objects.count()
+    total_users = CustomUser.objects.count()  # если есть модель владельцев
+    total_messages = Message.objects.count()
 
+    # Контекст для шаблона
     context = {
-        "total_newsletters": total_newsletters,
-        "active_newsletters": active_newsletters,
-        "unique_recipients": unique_recipients,
+        'is_manager': is_manager,
+        'total_newsletters': total_newsletters,
+        'active_newsletters': active_newsletters,
+        'unique_recipients': unique_recipients,
     }
 
-    return render(request, "mailing/home.html", context)
+    # Если это менеджер, добавляем общую статистику
+    if is_manager:
+        context.update({
+            'total_clients': total_clients,
+            'total_owners': total_users,
+            'total_messages': total_messages,
+            'total_newsletters': total_newsletters,
+        })
+
+    return render(request, 'mailing/home.html', context)
 
 
 class ClientDetailView(DetailView):

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from django.contrib.auth.views import LogoutView
 app_name = "mailing"
 
 urlpatterns = [
@@ -56,4 +56,5 @@ urlpatterns = [
         views.DeliveryAttemptListView.as_view(),
         name="delivery_attempts_list",
     ),
+    path("logout/", LogoutView.as_view(), name="logout"),
 ]

@@ -3,16 +3,56 @@
 {% block title %}Home - MailMaster{% endblock %}
 
 {% block content %}
+<style>
+    .custom-lead {
+        font-size: 2.5rem;
+        font-family: 'Arial', sans-serif;
+        font-weight: 700;
+        color: #ffffff;
+        font-style: italic;
+    }
+    .welcome-text {
+        font-size: 3.5rem; /* Увеличенный размер для "Добро пожаловать" */
+        color: yellow;
+    }
+    .stat-text {
+        color: yellow; /* Жёлтый цвет для статистики */
+        font-size: 1.2rem;
+    }
+</style>
+
 <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
     {% include "mailing/navbar.html" %}
-    <p class="lead">Управляйте своими клиентами и создавайте персонализированные рассылки с легкостью.</p>
-    <div>
-        <h3>Статистика:</h3>
-        <p>Общее количество рассылок: {{ total_newsletters }}</p>
-        <p>Количество активных рассылок: {{ active_newsletters }}</p>
-        <p>Количество уникальных получателей: {{ unique_recipients }}</p>
-    </div>
- </div>
+</div>
+
+<div class="d-flex flex-column justify-content-center align-items-center" style="height: 80vh;">
+    {% if user.is_authenticated %}
+        <h3 class="welcome-text">Добро пожаловать!</h3>
+    {% endif %}
+
+    <p class="lead custom-lead" style="font-size: 3rem; text-align: center; margin-top: 20px;">
+        Ваш персональный сервис <br> по управлению клиентами и рассылками
+    </p>
+
+    {% if user.is_authenticated %}
+        {% if is_manager %}
+            <p class="manager-note">Вы вошли как менеджер</p>
+            <h4>Общая информация для менеджера:</h4>
+            <p>Общее количество клиентов: {{ total_clients }}</p>
+            <p>Общее количество владельцев: {{ total_owners }}</p>
+            <p>Общее количество сообщений: {{ total_messages }}</p>
+            <p>Общее количество рассылок: {{ total_newsletters }}</p>
+        {% else %}
+            <h3>Ваша статистика:</h3>
+            <p>Общее количество рассылок: {{ total_newsletters }}</p>
+            <p>Количество активных рассылок: {{ active_newsletters }}</p>
+            <p>Количество уникальных получателей: {{ unique_recipients }}</p>
+        {% endif %}
+    {% else %}
+        <p style="font-size: 1.5rem; color: #8B4513; text-align: center; margin-top: 20px;">
+            Пожалуйста, войдите в учетную запись
+        </p>
+    {% endif %}
+</div>
+
 {% endblock %}
-
-
