@@ -1,21 +1,43 @@
 {% extends "base.html" %}
 
 {% block content %}
+  <style>
+    .client-link {
+      color: #ffffff; /* Белый цвет */
+      text-decoration: none; /* Убирает подчеркивание */
+    }
+    .client-link:hover {
+      text-decoration: underline; /* Добавляет подчеркивание при наведении */
+    }
+    .client-name {
+      color: black; /* Черный цвет для имени */
+      font-weight: bold; /* Жирное начертание */
+    }
+    .comment-label {
+      color: white; /* Белый цвет для слова "Комментарий" */
+    }
+    .no-permission {
+      color: yellow; /* Желтый цвет для текста "У вас нет прав" */
+    }
+  </style>
+
   {% include "mailing/navbar.html" %}
   <h2>Список клиентов</h2>
-  <a href="{% url 'mailing:client_add' %}">Добавить нового клиента</a>
+  <a href="{% url 'mailing:client_add' %}" class="client-link">Добавить нового клиента</a>
   <ul>
     {% for client in clients %}
       <li>
-        <a href="{% url 'mailing:client_detail' pk=client.pk %}">{{ client.full_name }}</a> - {{ client.email }}
+        <a href="{% url 'mailing:client_detail' pk=client.pk %}" class="client-link">
+          <span class="client-name">{{ client.full_name }}</span>
+        </a> - {{ client.email }}
         <br>
-        <strong>Комментарий:</strong> {{ client.comment|default:"Нет комментариев" }}
+        <strong class="comment-label">Комментарий:</strong> {{ client.comment|default:"Нет комментариев" }}
         <br>
         {% if request.user == client.owner or request.user.is_superuser %}
           <a href="{% url 'mailing:client_edit' client.pk %}">Редактировать</a>
           <a href="{% url 'mailing:client_delete' client.pk %}">Удалить</a>
         {% else %}
-          <p>У вас нет прав для редактирования или удаления этого клиента.</p>
+          <p class="no-permission">У вас нет прав для редактирования или удаления этого клиента.</p>
         {% endif %}
       </li>
     {% endfor %}

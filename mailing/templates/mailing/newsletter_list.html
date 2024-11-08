@@ -3,6 +3,9 @@
 {% block content %}
     {% include "mailing/navbar.html" %}
     <h2>Список рассылок</h2>
+
+    <a href="{% url 'mailing:newsletter_add' %}" style="color: white; text-decoration: none;">Добавить новую рассылку</a>
+
     <ul>
         {% for newsletter in newsletters %}
             <li>
@@ -30,12 +33,11 @@
                         <a href="{% url 'mailing:newsletter_edit' newsletter.pk %}">Редактировать</a>
                         <a href="{% url 'mailing:newsletter_delete' newsletter.pk %}">Удалить</a>
                     {% else %}
-                        <p>У вас нет прав для редактирования или удаления этого клиента.</p>
+                        <p style="color: yellow;">У вас нет прав для редактирования или удаления этого клиента.</p>
                     {% endif %}
             </li>
         {% empty %}
             <li>Нет рассылок.</li>
         {% endfor %}
     </ul>
-    <a href="{% url 'mailing:newsletter_add' %}">Добавить новую рассылку</a>
 {% endblock %}

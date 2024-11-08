@@ -21,7 +21,7 @@ from users.models import CustomUser
 
 def home(request):
     # Проверка, является ли пользователь менеджером
-    is_manager = request.user.groups.filter(name='Менеджер').exists()
+    is_manager = request.user.groups.filter(name="Менеджер").exists()
 
     # Статистика, доступная всем пользователям
     total_newsletters = Newsletter.objects.count()
@@ -35,22 +35,24 @@ def home(request):
 
     # Контекст для шаблона
     context = {
-        'is_manager': is_manager,
-        'total_newsletters': total_newsletters,
-        'active_newsletters': active_newsletters,
-        'unique_recipients': unique_recipients,
+        "is_manager": is_manager,
+        "total_newsletters": total_newsletters,
+        "active_newsletters": active_newsletters,
+        "unique_recipients": unique_recipients,
     }
 
     # Если это менеджер, добавляем общую статистику
     if is_manager:
-        context.update({
-            'total_clients': total_clients,
-            'total_owners': total_users,
-            'total_messages': total_messages,
-            'total_newsletters': total_newsletters,
-        })
+        context.update(
+            {
+                "total_clients": total_clients,
+                "total_owners": total_users,
+                "total_messages": total_messages,
+                "total_newsletters": total_newsletters,
+            }
+        )
 
-    return render(request, 'mailing/home.html', context)
+    return render(request, "mailing/home.html", context)
 
 
 class ClientDetailView(DetailView):
@@ -406,12 +408,17 @@ class DeliveryAttemptListView(ListView):
         return context
 
     def get_queryset(self):
+        # Получаем все попытки доставки и сортируем их по timestamp от новых к старым
+        queryset = DeliveryAttempt.objects.all().order_by(
+            "-timestamp"
+        )  # Убеждаемся, что записи идут от последних к более ранним
+
         if (
             self.request.user.is_superuser
             or self.request.user.groups.filter(name="Менеджер").exists()
         ):
-            return DeliveryAttempt.objects.all()
-        return DeliveryAttempt.objects.filter(newsletter__owner=self.request.user)
+            return queryset
+        return queryset.filter(newsletter__owner=self.request.user)
 
 
 class ClientBlockView(PermissionRequiredMixin, UpdateView):
