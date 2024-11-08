@@ -1,8 +1,16 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
 
 class Client(models.Model):
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name="Владелец",
+        related_name="owned_clients",
+        null=True,
+    )
     email = models.EmailField(unique=True, verbose_name="Email")
     full_name = models.CharField(max_length=100, verbose_name="Ф.И.О.")
     comment = models.TextField(blank=True, verbose_name="Комментарий")
@@ -16,6 +24,15 @@ class Client(models.Model):
         messages = Message.objects.filter(newsletter__in=self.newsletters.all())
         return messages
 
+    class Meta:
+        verbose_name = "клиент"
+        verbose_name_plural = "клиенты"
+        ordering = ["full_name"]
+        permissions = [
+            ("can_view_client", "Может просматривать клиентов"),
+            ("can_block_client", "Может заблокировать клиента"),
+        ]
+
 
 class Message(models.Model):
     subject = models.CharField(max_length=255)
@@ -24,9 +41,21 @@ class Message(models.Model):
         Client, on_delete=models.CASCADE, related_name="messages", null=True
     )
     is_sent = models.BooleanField(default=False)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name="Владелец",
+        related_name="owned_messages",
+        null=True,
+    )
 
     def __str__(self):
         return self.subject
+
+    class Meta:
+        permissions = [
+            ("can_view_message", "Может просматривать сообщения"),
+        ]
 
 
 class Newsletter(models.Model):
@@ -36,6 +65,13 @@ class Newsletter(models.Model):
         ("running", "Запущена"),
         ("completed", "Завершена"),
     ]
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name="Владелец",
+        related_name="owned_newsletters",
+        null=True,
+    )
     subject = models.CharField(max_length=200, default="Без темы")
     start_date = models.DateTimeField(null=True, blank=True)
     sent_date = models.DateTimeField(null=True, blank=True)
@@ -67,6 +103,12 @@ class Newsletter(models.Model):
     def complete_sending(self):
         self.status = "completed"
         self.save()
+
+    class Meta:
+        permissions = [
+            ("can_view_client", "Может просматривать рассылку"),
+            ("can_deactivate_newsletter", "Может деактивировать рассылку"),
+        ]
 
 
 class DeliveryAttempt(models.Model):

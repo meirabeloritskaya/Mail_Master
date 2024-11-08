@@ -1,4 +1,6 @@
 from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views.generic import (
     ListView,
     CreateView,
@@ -6,6 +8,7 @@ from django.views.generic import (
     DeleteView,
     DetailView,
 )
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Client, Message, Newsletter, DeliveryAttempt
 from .forms import ClientForm, MessageForm, NewsletterForm
@@ -74,10 +77,18 @@ class ClientDetailView(DetailView):
         return redirect("mailing:client_detail", pk=client.pk)
 
 
-class ClientListView(ListView):
+class ClientListView(LoginRequiredMixin, ListView):
     model = Client
     template_name = "mailing/client_list.html"
     context_object_name = "clients"
+
+    def get_queryset(self):
+        if (
+            self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Менеджер").exists()
+        ):
+            return Client.objects.all()
+        return Client.objects.filter(owner=self.request.user)
 
 
 class ClientCreateView(CreateView):
@@ -86,18 +97,60 @@ class ClientCreateView(CreateView):
     template_name = "mailing/client_form.html"
     success_url = reverse_lazy("mailing:client_list")
 
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
-class ClientUpdateView(UpdateView):
+
+class ClientUpdateView(LoginRequiredMixin, UpdateView):
     model = Client
     form_class = ClientForm
     template_name = "mailing/client_form.html"
     success_url = reverse_lazy("mailing:client_list")
+
+    def form_valid(self, form):
+        client = self.get_object()
+
+        if not self.user_has_permission(client):
+            messages.error(
+                self.request, "У вас нет прав на редактирование информации о клиенте."
+            )
+            return HttpResponseRedirect(
+                self.request.META.get("HTTP_REFERER", self.success_url)
+            )
+        return super().form_valid(form)
+
+    def user_has_permission(self, product):
+
+        return (
+            self.request.user == product.owner
+            or self.request.user.has_perm("mailing.can_change_client")
+            or self.request.user.groups.filter(name="Пользователь").exists()
+        )
 
 
 class ClientDeleteView(DeleteView):
     model = Client
     template_name = "mailing/client_confirm_delete.html"
     success_url = reverse_lazy("mailing:client_list")
+
+    def post(self, request, *args, **kwargs):
+        product = self.get_object()
+
+        if not self.user_has_permission(product):
+            messages.error(request, "У вас нет прав на удаление информации о клиенте.")
+            return HttpResponseRedirect(
+                request.META.get("HTTP_REFERER", self.success_url)
+            )
+        return super().post(request, *args, **kwargs)
+
+    def user_has_permission(self, product):
+
+        return (
+            self.request.user == product.owner
+            or self.request.user.has_perm("mailing.can_delete_client")
+            or self.request.user.groups.filter(name="Пользователь").exists()
+        )
 
 
 class MessageCreateView(CreateView):
@@ -106,11 +159,23 @@ class MessageCreateView(CreateView):
     template_name = "mailing/message_form.html"
     success_url = reverse_lazy("mailing:message_list")
 
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
-class MessagesListView(ListView):
+
+class MessagesListView(LoginRequiredMixin, ListView):
     model = Message
     template_name = "mailing/message_list.html"
     context_object_name = "message_list"
+
+    def get_queryset(self):
+        if (
+            self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Менеджер").exists()
+        ):
+            return Message.objects.all()
+        return Message.objects.filter(owner=self.request.user)
 
 
 class MessageClientView(ListView):
@@ -133,14 +198,50 @@ class MessageEditView(UpdateView):
     template_name = "mailing/message_edit.html"
     success_url = reverse_lazy("mailing:message_list")
 
+    def form_valid(self, form):
+        product = self.get_object()
+
+        if not self.user_has_permission(product):
+            messages.error(self.request, "У вас нет прав на редактирование продукта.")
+            return HttpResponseRedirect(
+                self.request.META.get("HTTP_REFERER", self.success_url)
+            )
+        return super().form_valid(form)
+
+    def user_has_permission(self, product):
+
+        return (
+            self.request.user == product.owner
+            or self.request.user.has_perm("mailing.can_change_message")
+            or self.request.user.groups.filter(name="Пользователь").exists()
+        )
+
 
 class MessageDeleteView(DeleteView):
     model = Message
     template_name = "mailing/message_delete.html"
     success_url = reverse_lazy("mailing:message_list")
 
+    def post(self, request, *args, **kwargs):
+        product = self.get_object()
 
-class NewsletterCreateView(CreateView):
+        if not self.user_has_permission(product):
+            messages.error(request, "У вас нет прав на удаление сообщения.")
+            return HttpResponseRedirect(
+                request.META.get("HTTP_REFERER", self.success_url)
+            )
+        return super().post(request, *args, **kwargs)
+
+    def user_has_permission(self, product):
+
+        return (
+            self.request.user == product.owner
+            or self.request.user.has_perm("mailing.can_delete_message")
+            or self.request.user.groups.filter(name="Пользователь").exists()
+        )
+
+
+class NewsletterCreateView(LoginRequiredMixin, CreateView):
     model = Newsletter
     form_class = NewsletterForm
     template_name = "mailing/newsletter_form.html"
@@ -199,13 +300,20 @@ class NewsletterUpdateView(UpdateView):
         return reverse_lazy("mailing:newsletter_list")
 
 
-class NewsletterListView(ListView):
+class NewsletterListView(LoginRequiredMixin, ListView):
     model = Newsletter
     template_name = "mailing/newsletter_list.html"
     context_object_name = "newsletters"
 
     def get_queryset(self):
-        return Newsletter.objects.prefetch_related("messages", "recipients")
+        if (
+            self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Менеджер").exists()
+        ):
+            return Newsletter.objects.all()
+        return Newsletter.objects.filter(owner=self.request.user).prefetch_related(
+            "messages", "recipients"
+        )
 
 
 class NewsletterDeleteView(DeleteView):
@@ -282,4 +390,25 @@ class DeliveryAttemptListView(ListView):
         return context
 
 
-#
+class ClientBlockView(PermissionRequiredMixin, UpdateView):
+    model = Client
+    fields = ["is_blocked"]
+    template_name = "client_block.html"
+    permission_required = "mailing.can_block_client"
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+
+class NewsletterDeactivateView(PermissionRequiredMixin, UpdateView):
+    model = Newsletter
+    fields = ["status"]
+    template_name = "newsletter_deactivate.html"
+    permission_required = "mailing.can_deactivate_newsletter"
+
+    def form_valid(self, form):
+        form.instance.status = "completed"
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
