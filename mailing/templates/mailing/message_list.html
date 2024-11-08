@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+    <h2>Список сообщения</h2>
+
+    <a href="{% url 'mailing:message_add' %}" style="color: white; text-decoration: none;">Добавить новое сообщение</a>
+    <ul>
+        {% for message in message_list %}
+            <li>
+                <span style="color: black; font-weight: bold;">{{ message.subject }}</span> - {{ message.body }}
+                {% if request.user == client.owner or request.user.is_superuser %}
+                    <a href="{% url 'mailing:message_edit' message.pk %}">Редактировать</a>
+                    <a href="{% url 'mailing:message_delete' message.pk %}">Удалить</a>
+                {% else %}
+                    <p style="color: yellow;">У вас нет прав для редактирования или удаления этого клиента.</p>
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>Нет сообщений.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

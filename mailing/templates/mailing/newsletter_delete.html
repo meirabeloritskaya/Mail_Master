@@ -1,0 +1,14 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+{% include "mailing/navbar.html" %}
+  <h1>Удалить рассылку</h1>
+  <p>Вы уверены, что хотите удалить "{{ newsletter.title }}"?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Да, удалить</button>
+    <a href="{% url 'mailing:newsletter_list' %}">Отменить</a>
+  </form>
+{% endblock %}
+

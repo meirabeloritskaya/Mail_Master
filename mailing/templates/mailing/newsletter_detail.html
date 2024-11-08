@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Детали рассылки</h2>
+    <p><strong>Тема:</strong> {{ newsletter.subject }}</p>
+    <p><strong>Дата начала:</strong> {{ newsletter.start_date }}</p>
+    <p><strong>Дата окончания:</strong> {{ newsletter.end_date }}</p>
+
+    <h3>Попытки отправки</h3>
+    <ul>
+        {% for attempt in newsletter.delivery_attempts.all %}
+            <li>
+                <strong>Время:</strong> {{ attempt.timestamp }}<br>
+                <strong>Статус:</strong> {{ attempt.get_status_display }}<br>
+                {% if attempt.status == "failed" %}
+                    <strong>Ответ сервера:</strong> {{ attempt.server_response }}
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>Нет попыток отправки для этой рассылки.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+l>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+    <div class="container mt-4">
+        <h2>{{ client.full_name }}</h2>
+        <p><strong>Email:</strong> {{ client.email }}</p>
+        <p><strong>Комментарий:</strong> {{ client.comment|default:"Нет комментариев" }}</p>
+
+        <h3>Сообщения, связанные с клиентом:</h3>
+        <ul class="list-group">
+            {% for message in client_message_list %}
+                <li class="list-group-item">{{ message.subject }}</li>
+            {% empty %}
+                <li class="list-group-item">Нет сообщений для этого клиента.</li>
+            {% endfor %}
+        </ul>
+
+        <h3 class="mt-4">Сообщения, которые еще не назначены клиенту:</h3>
+
+        <form method="post" action="{% url 'mailing:client_detail' client.pk %}">
+            {% csrf_token %}
+            <ul class="list-group">
+                {% for message in unassigned_messages %}
+                    <li class="list-group-item">
+                        <input type="checkbox" name="messages" value="{{ message.id }}">
+                        {{ message.subject }}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">Нет сообщений для назначения.</li>
+                {% endfor %}
+            </ul>
+
+            <!-- Кнопка отправки сообщений -->
+            <button type="submit" class="btn btn-primary mt-3">Отправить выбранные сообщения</button>
+        </form>
+    </div>
+{% endblock %}

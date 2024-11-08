@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %} <!-- Навбар внутри страницы попыток рассылок -->
+    <div class="container mt-4" style="background-color: #888888; padding: 20px;"> <!-- Серый фон для страницы -->
+        <h2 style="color: black;">Статистика попыток рассылок</h2> <!-- Черный текст без жирности -->
+        <p style="color: white;">Успешных попыток: {{ success_count }}</p>  <!-- Белый текст -->
+        <p style="color: white;">Неуспешных попыток: {{ failed_count }}</p>  <!-- Белый текст -->
+
+        <ul class="list-group mt-4">
+            {% for attempt in attempts %}
+                <li class="list-group-item" style="background-color: transparent; color: white;">
+                    <strong style="color: black;">Сообщения:</strong> <!-- Черный, не жирный текст -->
+                    <ul>
+                        {% for message in attempt.newsletter.messages.all %}
+                            <li style="color: white;">{{ message.subject }}</li> <!-- Белый текст для названия сообщения -->
+                        {% empty %}
+                            <li>Нет сообщений</li>
+                        {% endfor %}
+                    </ul>
+
+                    <strong style="color: black;">Дата и время:</strong> {{ attempt.timestamp }}<br>
+                    <strong style="color: black;">Статус:</strong> {{ attempt.get_status_display }}<br>
+
+                    <span style="color: yellow;">Ответ сервера:</span> <!-- Желтый текст для названия, без жирности -->
+                    <span style="color: black;">{{ attempt.server_response }}</span><br> <!-- Черный, не жирный текст для ответа -->
+                </li>
+            {% empty %}
+                <li class="list-group-item" style="background-color: transparent;">Нет попыток отправки рассылок.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+    <h2>{% if form.instance.id %}Редактирование{% else %}Создание{% endif %} рассылки</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-group">
+            <label for="sent_date">Дата отправки:</label>
+            {{ form.sent_date }}
+        </div>
+
+        <div class="form-group">
+            <label for="end_date">Дата окончания:</label>
+            {{ form.end_date }}
+        </div>
+
+        <div class="form-group">
+            <label>Сообщения:</label>
+            {% for message in messages %}
+                <div>
+                    <input type="checkbox" name="messages" value="{{ message.id }}" id="message_{{ message.id }}">
+                    <label for="message_{{ message.id }}">{{ message.subject }}</label>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label>Клиенты:</label>
+            {% for client in clients %}
+                <div>
+                    <input type="checkbox" name="recipients" value="{{ client.id }}" id="client_{{ client.id }}">
+                    <label for="client_{{ client.id }}">{{ client.full_name }}</label>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+
+    <a href="{% url 'mailing:newsletter_list' %}" class="btn btn-secondary">Назад к списку рассылок</a>
+{% endblock %}
