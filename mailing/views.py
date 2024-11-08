@@ -1,6 +1,8 @@
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 from django.views.generic import (
     ListView,
     CreateView,
@@ -55,6 +57,7 @@ def home(request):
     return render(request, "mailing/home.html", context)
 
 
+@method_decorator(cache_page(60 * 2), name="dispatch")
 class ClientDetailView(DetailView):
     model = Client
     template_name = "mailing/client_detail.html"
@@ -95,6 +98,7 @@ class ClientDetailView(DetailView):
         return redirect("mailing:client_detail", pk=client.pk)
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")
 class ClientListView(LoginRequiredMixin, ListView):
     model = Client
     template_name = "mailing/client_list.html"
@@ -182,6 +186,7 @@ class MessageCreateView(CreateView):
         return super().form_valid(form)
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")
 class MessagesListView(LoginRequiredMixin, ListView):
     model = Message
     template_name = "mailing/message_list.html"
@@ -318,6 +323,7 @@ class NewsletterUpdateView(UpdateView):
         return reverse_lazy("mailing:newsletter_list")
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")
 class NewsletterListView(LoginRequiredMixin, ListView):
     model = Newsletter
     template_name = "mailing/newsletter_list.html"
