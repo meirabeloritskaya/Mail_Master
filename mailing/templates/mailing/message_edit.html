@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+
+    <h1>Редактировать сообщение</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="subject">Тема:</label>
+        <input type="text" name="subject" id="subject" value="{{ message.subject }}">
+        <br>
+        <label for="body">Тело сообщения:</label>
+        <textarea name="body" id="body">{{ message.body }}</textarea>
+        <br>
+        <button type="submit">Сохранить</button>
+    </form>
+    <a href="{% url 'mailing:message_list' %}">Назад к списку сообщений</a>
+
+{% endblock %}
+
+

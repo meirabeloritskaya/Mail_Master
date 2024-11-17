@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include "mailing/navbar.html" %}
+    <h2>Список рассылок</h2>
+
+    <a href="{% url 'mailing:newsletter_add' %}" style="color: white; text-decoration: none;">Добавить новую рассылку</a>
+
+    <ul>
+        {% for newsletter in newsletters %}
+            <li>
+                <strong>Сообщения:</strong>
+                    <ul>
+                        {% for message in newsletter.messages.all %}
+                            <li>{{ message.subject }}</li>
+                        {% empty %}
+                            <li>Нет сообщений</li>
+                        {% endfor %}
+                    </ul>
+                <strong>Начало рассылки:</strong> {{ newsletter.sent_date }}<br>
+                <strong>Окончание рассылки:</strong> {{ newsletter.end_date }}<br>
+                <strong>Статус:</strong> {{ newsletter.get_status_display }}<br>
+                <strong>Получатели:</strong>
+                <ul>
+                    {% for recipient in newsletter.recipients.all %}
+                        <li>{{ recipient.full_name }}</li>
+                    {% empty %}
+                        <li>Нет получателей</li>
+                    {% endfor %}
+                </ul>
+                    {% if request.user == client.owner or request.user.is_superuser %}
+                        <a href="{% url 'mailing:send_newsletter' newsletter.pk %}" class="btn btn-primary">Отправить</a>
+                        <a href="{% url 'mailing:newsletter_edit' newsletter.pk %}">Редактировать</a>
+                        <a href="{% url 'mailing:newsletter_delete' newsletter.pk %}">Удалить</a>
+                    {% else %}
+                        <p style="color: yellow;">У вас нет прав для редактирования или удаления этого клиента.</p>
+                    {% endif %}
+            </li>
+        {% empty %}
+            <li>Нет рассылок.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
